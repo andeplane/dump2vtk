@@ -1,12 +1,20 @@
 #include <QString>
 #include <QDebug>
 #include <QVector3D>
+#include <functional>
 #include "lammpstextdumpreader.h"
 #include "spatialbingrid.h"
 #include "vtkwriter.h"
 
 int main(int argc, char *argv[])
 {
+    std::function<float(Voxel &voxel)> customFunctor;
+    // If you want to combine values, uncomment the next lines and write a custom functor on each voxel.
+    // One example is if three values are the diagonal components of the stress, you could sum them and divide by three to get pressure.
+//    customFunctor = [](Voxel &voxel) {
+//        return 1.0/3*(voxel.values[0]+voxel.values[1]+voxel.values[2]);
+//    };
+
     if(argc != 7 && argc!=10) {
         qDebug() << "./dump2vtk inFileName outFileName numVoxelsX numVoxelsY numVoxelsZ timestep [voxelSizeX=1 voxelSizeY=1 voxelSizeZ=1]";
         qDebug() << "timestep can be any number starting from 0, or 'all'";
@@ -53,7 +61,7 @@ int main(int argc, char *argv[])
             VTKWriter writer;
             QString fileName = QString("%1%2.vtk").arg(outFileName).arg(currentTimestep);
             qDebug() << "Will write VTK file with " << grid.numValues() << " values per chunk and " << grid.voxels().size() << " chunks to " << fileName;
-            writer.write(grid, fileName, voxelSize);
+            writer.write(grid, fileName, voxelSize,customFunctor);
             currentTimestep += 1;
         }
     } else {
@@ -63,8 +71,8 @@ int main(int argc, char *argv[])
             SpatialBinGrid grid = reader.getNextTimeStep();
             if(timestep==currentTimestep) {
                 VTKWriter writer;
-                qDebug() << "Will write VTK file with " << grid.numValues() << " values per chunk and " << grid.voxels().size() << " chunks to " << outFileName;
-                writer.write(grid, outFileName+".vtk", voxelSize);
+                qDebug() << "Will write VTK file with " << grid.numValues() << " values per chunk and " << grid.voxels().size() << " chunks to " << outFileName+".vtk";
+                writer.write(grid, outFileName+".vtk", voxelSize, customFunctor);
                 return 0;
             }
             currentTimestep += 1;

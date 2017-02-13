@@ -8,12 +8,7 @@ VTKWriter::VTKWriter()
 
 }
 
-void VTKWriter::write(QVector<SpatialBinGrid> &grids, QString fileName, QVector3D voxelSize)
-{
-
-}
-
-void VTKWriter::write(SpatialBinGrid &grid, QString fileName, QVector3D voxelSize)
+void VTKWriter::write(SpatialBinGrid &grid, QString fileName, QVector3D voxelSize, std::function<float(Voxel &voxel)> customFunctor)
 {
     QFile file(fileName);
     if(!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
@@ -32,15 +27,23 @@ void VTKWriter::write(SpatialBinGrid &grid, QString fileName, QVector3D voxelSiz
     out << "ORIGIN 0.0 0.0 0.0" << endl;
     out << "SPACING " << voxelSize.x() << " " << voxelSize.y() << " " << voxelSize.z() << endl;
     out << "POINT_DATA " << grid.voxels().size() << endl;
-    out << "SCALARS values float " << grid.numValues() << endl;
+    if(customFunctor) {
+        out << "SCALARS values float" << endl;
+    } else {
+        out << "SCALARS values float " << grid.numValues() << endl;
+    }
     out << "LOOKUP_TABLE default" << endl;
 
     for(int k=0; k<grid.nz(); k++) {
         for(int j=0; j<grid.ny(); j++) {
             for(int i=0; i<grid.nx(); i++) {
-                const Voxel &voxel = grid(i,j,k);
-                for(int n=0; n<grid.numValues(); n++) {
-                    out << voxel.values[n] << " ";
+                Voxel &voxel = grid(i,j,k);
+                if(customFunctor) {
+                    out << customFunctor(voxel);
+                } else {
+                    for(int n=0; n<grid.numValues(); n++) {
+                        out << voxel.values[n] << " ";
+                    }
                 }
                 out << endl;
             }
