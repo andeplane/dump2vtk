@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
         while(reader.hasNextTimeStep()) {
             SpatialBinGrid grid = reader.getNextTimeStep();
             VTKWriter writer;
-            QString fileName = QString("%1%2.vtk").arg(outFileName).arg(currentTimestep);
+            QString fileName = QString("%1.%2.vtk").arg(outFileName).arg(currentTimestep);
             qDebug() << "Will write VTK file with " << grid.numValues() << " values per chunk and " << grid.voxels().size() << " chunks to " << fileName;
             writer.write(grid, fileName, voxelSize,customFunctor);
             currentTimestep += 1;
