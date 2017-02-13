@@ -7,8 +7,11 @@
 
 int main(int argc, char *argv[])
 {
-    if(argc != 6 && argc!=9) {
-        qDebug() << "./dump2vtk file out.vtk numVoxelsX numVoxelsY numVoxelsZ [voxelSizeX=1 voxelSizeY=1 voxelSizeZ=1]";
+    if(argc != 7 && argc!=10) {
+        qDebug() << "./dump2vtk inFileName outFileName numVoxelsX numVoxelsY numVoxelsZ timestep [voxelSizeX=1 voxelSizeY=1 voxelSizeZ=1]";
+        qDebug() << "timestep can be any number starting from 0, or 'all'";
+        qDebug() << "outFileName should not have .vtk extension";
+
         return 0;
     }
 
@@ -17,19 +20,57 @@ int main(int argc, char *argv[])
     int nx = atoi(argv[3]);
     int ny = atoi(argv[4]);
     int nz = atoi(argv[5]);
+    QString timestepStr = QString::fromUtf8(argv[6]);
+    bool allTimesteps = false;
+    int timestep = 0;
+
+    if(timestepStr==QString("all")) {
+        allTimesteps = true;
+    } else {
+        bool ok;
+        timestep = timestepStr.toInt(&ok);
+        if(!ok) {
+            qDebug() << "Error could not parse timestep argument.";
+            return 0;
+        }
+    }
+
     QVector3D voxelSize(1.0,1.0,1.0);
-    if(argc==9) {
-        voxelSize[0] = atof(argv[6]);
-        voxelSize[1] = atof(argv[7]);
-        voxelSize[2] = atof(argv[8]);
+    if(argc==10) {
+        voxelSize[0] = atof(argv[7]);
+        voxelSize[1] = atof(argv[8]);
+        voxelSize[2] = atof(argv[9]);
     }
     qDebug() << "Will load LAMMPS chunk dump file: " << inFileName;
 
     LAMMPSTextDumpReader reader(inFileName, nx, ny, nz);
-    SpatialBinGrid grid = reader.getNextTimeStep();
-    VTKWriter writer;
-    qDebug() << "Will write VTK file with " << grid.numValues() << " values per chunk and " << grid.voxels().size() << " chunks.";
-    writer.write(grid, outFileName, voxelSize);
+
+    if(allTimesteps) {
+        qDebug() << "Will write all timesteps to VTK files.";
+        int currentTimestep = 0;
+        while(reader.hasNextTimeStep()) {
+            SpatialBinGrid grid = reader.getNextTimeStep();
+            VTKWriter writer;
+            QString fileName = QString("%1%2.vtk").arg(outFileName).arg(currentTimestep);
+            qDebug() << "Will write VTK file with " << grid.numValues() << " values per chunk and " << grid.voxels().size() << " chunks to " << fileName;
+            writer.write(grid, fileName, voxelSize);
+            currentTimestep += 1;
+        }
+    } else {
+        qDebug() << "Will write timesteps " << timestep << " to VTK file.";
+        int currentTimestep = 0;
+        while(reader.hasNextTimeStep()) {
+            SpatialBinGrid grid = reader.getNextTimeStep();
+            if(timestep==currentTimestep) {
+                VTKWriter writer;
+                qDebug() << "Will write VTK file with " << grid.numValues() << " values per chunk and " << grid.voxels().size() << " chunks to " << outFileName;
+                writer.write(grid, outFileName+".vtk", voxelSize);
+                return 0;
+            }
+            currentTimestep += 1;
+        }
+    }
+
 
     return 0;
 }

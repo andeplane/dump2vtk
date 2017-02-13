@@ -2,20 +2,23 @@
 #include <QDebug>
 
 LAMMPSTextDumpReader::LAMMPSTextDumpReader(QString fileName, int nx, int ny, int nz) :
-    m_nx(nx), m_ny(ny), m_nz(nz), m_fileName(fileName)
+    m_filePosition(0), m_nx(nx), m_ny(ny), m_nz(nz), m_fileName(fileName)
 {
     m_file.setFileName(fileName);
+    if(!m_file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        char error[1024];
+        sprintf(error, "Error: could not open file %s", m_fileName.toUtf8().constData());
+        qFatal(error);
+    }
+    QTextStream stream(&m_file);
+    stream.readLine();
+    stream.readLine();
+    stream.readLine();
+    m_filePosition = stream.pos();
 }
 
 SpatialBinGrid LAMMPSTextDumpReader::getNextTimeStep()
 {
-    if(!m_file.isOpen()) {
-        if(!m_file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-            char error[1024];
-            sprintf(error, "Error: could not open file %s", m_fileName.toUtf8().constData());
-            qFatal(error);
-        }
-    }
     SpatialBinGrid grid;
     grid.setNx(m_nx);
     grid.setNy(m_ny);
@@ -23,9 +26,7 @@ SpatialBinGrid LAMMPSTextDumpReader::getNextTimeStep()
 
     bool foundHeader = false;
     QTextStream stream(&m_file);
-    stream.readLine();
-    stream.readLine();
-    stream.readLine();
+    stream.seek(m_filePosition);
     QVector3D voxelSize(1.0/m_nx, 1.0/m_ny, 1.0/m_nz);
     int voxelCount = 0;
     int numVoxelsInTimestep = 0;
@@ -33,6 +34,7 @@ SpatialBinGrid LAMMPSTextDumpReader::getNextTimeStep()
     int numAtoms = 0;
     while(!stream.atEnd()) {
         QString line = stream.readLine().trimmed();
+        // qDebug() << "Line: " << line;
         QStringList words = line.split(" ", QString::SplitBehavior::SkipEmptyParts);
 
         if(!foundHeader) {
@@ -91,7 +93,15 @@ SpatialBinGrid LAMMPSTextDumpReader::getNextTimeStep()
         voxelCount++;
         if(voxelCount == numVoxelsInTimestep) break; // Finished with this timestep
     }
+    m_filePosition = stream.pos();
     return grid;
+}
+
+bool LAMMPSTextDumpReader::hasNextTimeStep()
+{
+    QTextStream stream(&m_file);
+    stream.seek(m_filePosition);
+    return !stream.atEnd();
 }
 
 QString LAMMPSTextDumpReader::fileName() const
