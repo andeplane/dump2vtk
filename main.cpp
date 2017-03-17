@@ -31,12 +31,16 @@ int main(int argc, char *argv[])
     QString timestepStr = QString::fromUtf8(argv[6]);
     bool allTimesteps = false;
     int timestep = 0;
-
+    qDebug() << "Will read " << inFileName;
+    qDebug() << "Will write " << outFileName;
+    qDebug() << "Voxels: " << nx << ", " << ny << ", " << nz;
     if(timestepStr==QString("all")) {
         allTimesteps = true;
+        qDebug() << "All timesteps";
     } else {
         bool ok;
         timestep = timestepStr.toInt(&ok);
+        qDebug() << "Timestep " << timestep;
         if(!ok) {
             qDebug() << "Error could not parse timestep argument.";
             return 0;
@@ -49,6 +53,7 @@ int main(int argc, char *argv[])
         voxelSize[1] = atof(argv[8]);
         voxelSize[2] = atof(argv[9]);
     }
+    qDebug() << "Voxel size " << voxelSize[0] << ", " << voxelSize[1] << ", " << voxelSize[2];
     qDebug() << "Will load LAMMPS chunk dump file: " << inFileName;
 
     LAMMPSTextDumpReader reader(inFileName, nx, ny, nz);
@@ -61,7 +66,7 @@ int main(int argc, char *argv[])
             VTKWriter writer;
             QString fileName = QString("%1.%2.vtk").arg(outFileName).arg(currentTimestep);
             qDebug() << "Will write VTK file with " << grid.numValues() << " values per chunk and " << grid.voxels().size() << " chunks to " << fileName;
-            writer.write(grid, fileName, voxelSize,customFunctor);
+            writer.write(grid, reader.headers(), fileName, voxelSize,customFunctor);
             currentTimestep += 1;
         }
     } else {
@@ -72,7 +77,7 @@ int main(int argc, char *argv[])
             if(timestep==currentTimestep) {
                 VTKWriter writer;
                 qDebug() << "Will write VTK file with " << grid.numValues() << " values per chunk and " << grid.voxels().size() << " chunks to " << outFileName+".vtk";
-                writer.write(grid, outFileName+".vtk", voxelSize, customFunctor);
+                writer.write(grid, reader.headers(), outFileName+".vtk", voxelSize, customFunctor);
                 return 0;
             }
             currentTimestep += 1;

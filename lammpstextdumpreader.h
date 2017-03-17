@@ -12,7 +12,10 @@ public:
     bool hasNextTimeStep();
     QString fileName() const;
     void setFileName(const QString &fileName);
+    QStringList headers() const;
+
 private:
+    QStringList m_headers;
     qint64 m_filePosition;
     int m_nx, m_ny, m_nz;
     QString m_fileName;

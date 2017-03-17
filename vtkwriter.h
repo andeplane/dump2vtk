@@ -8,7 +8,7 @@ class VTKWriter
 {
 public:
     VTKWriter();
-    void write(SpatialBinGrid &grid, QString fileName, QVector3D voxelSize, std::function<float(Voxel &voxel)> customFunctor);
+    void write(SpatialBinGrid &grid, QStringList headers, QString fileName, QVector3D voxelSize, std::function<float(Voxel &voxel)> customFunctor);
 };
 
 #endif // VTKWRITER_H

@@ -13,7 +13,14 @@ LAMMPSTextDumpReader::LAMMPSTextDumpReader(QString fileName, int nx, int ny, int
     QTextStream stream(&m_file);
     stream.readLine();
     stream.readLine();
-    stream.readLine();
+
+    QString line = stream.readLine();
+    QStringList words = line.split(" ", QString::SplitBehavior::SkipEmptyParts);
+    qDebug() << "Read header: " << words;
+    for(int i=6; i<words.length(); i++) {
+        m_headers.append(words[i]);
+    }
+    qDebug() << "Actually headers: " << m_headers;
     m_filePosition = stream.pos();
 }
 
@@ -38,6 +45,7 @@ SpatialBinGrid LAMMPSTextDumpReader::getNextTimeStep()
         QStringList words = line.split(" ", QString::SplitBehavior::SkipEmptyParts);
 
         if(!foundHeader) {
+            qDebug() << "Words: " << words;
             if(words.size()!=3) {
                 char error[1024];
                 sprintf(error, "Error could not parse header: %s", line.toUtf8().constData());
@@ -112,4 +120,9 @@ QString LAMMPSTextDumpReader::fileName() const
 void LAMMPSTextDumpReader::setFileName(const QString &fileName)
 {
     m_fileName = fileName;
+}
+
+QStringList LAMMPSTextDumpReader::headers() const
+{
+    return m_headers;
 }
