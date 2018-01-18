@@ -28,41 +28,41 @@ void VTKWriter::write(SpatialBinGrid &grid, QStringList headers, QString fileNam
     out << "SPACING " << voxelSize.x() << " " << voxelSize.y() << " " << voxelSize.z() << endl;
     out << "POINT_DATA " << grid.voxels().size() << endl;
 
-    for(int n=0; n<headers.size(); n++) {
-        QString header = headers[n];
-        out << "SCALARS " << header << " float 1" << endl;
-        out << "LOOKUP_TABLE default" << endl;
-        for(int k=0; k<grid.nz(); k++) {
-            for(int j=0; j<grid.ny(); j++) {
-                for(int i=0; i<grid.nx(); i++) {
-                    Voxel &voxel = grid(i,j,k);
-                    out << voxel.values[n] << "\n";
-                }
-            }
-        }
-    }
-
-//    if(customFunctor) {
-//        out << "SCALARS values float" << endl;
-//    } else {
-//        out << "SCALARS values float " << grid.numValues() << endl;
-//    }
-//    out << "LOOKUP_TABLE default" << endl;
-
-//    for(int k=0; k<grid.nz(); k++) {
-//        for(int j=0; j<grid.ny(); j++) {
-//            for(int i=0; i<grid.nx(); i++) {
-//                Voxel &voxel = grid(i,j,k);
-//                if(customFunctor) {
-//                    out << customFunctor(voxel);
-//                } else {
-//                    for(int n=0; n<grid.numValues(); n++) {
-//                        out << voxel.values[n] << " ";
-//                    }
+//    for(int n=0; n<headers.size(); n++) {
+//        QString header = headers[n];
+//        out << "SCALARS " << header << " float 1" << endl;
+//        out << "LOOKUP_TABLE default" << endl;
+//        for(int k=0; k<grid.nz(); k++) {
+//            for(int j=0; j<grid.ny(); j++) {
+//                for(int i=0; i<grid.nx(); i++) {
+//                    Voxel &voxel = grid(i,j,k);
+//                    out << voxel.values[n] << "\n";
 //                }
-//                out << endl;
 //            }
 //        }
 //    }
+
+    if(customFunctor) {
+        out << "SCALARS values float" << endl;
+    } else {
+        out << "SCALARS values float " << grid.numValues() << endl;
+    }
+    out << "LOOKUP_TABLE default" << endl;
+
+    for(int k=0; k<grid.nz(); k++) {
+        for(int j=0; j<grid.ny(); j++) {
+            for(int i=0; i<grid.nx(); i++) {
+                Voxel &voxel = grid(i,j,k);
+                if(customFunctor) {
+                    out << customFunctor(voxel);
+                } else {
+                    for(int n=0; n<grid.numValues(); n++) {
+                        out << voxel.values[n] << " ";
+                    }
+                }
+                out << endl;
+            }
+        }
+    }
     file.close();
 }

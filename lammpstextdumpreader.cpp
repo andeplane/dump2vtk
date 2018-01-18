@@ -73,13 +73,13 @@ SpatialBinGrid LAMMPSTextDumpReader::getNextTimeStep()
         int numValues = words.size()-5;
         bool ok;
         QVector3D center;
-        center[0] = words[1].toFloat(&ok);
+        center[0] = words[1].toFloat(&ok) / (30*7.16);
         if(!ok) { qDebug() << "Error, could not parse line: " << line; exit(1); }
 
-        center[1] = words[2].toFloat(&ok);
+        center[1] = words[2].toFloat(&ok) / (30*7.16);
         if(!ok) { qDebug() << "Error, could not parse line: " << line; exit(1); }
 
-        center[2] = words[3].toFloat(&ok);
+        center[2] = words[3].toFloat(&ok) / (18*7.16);
         if(!ok) { qDebug() << "Error, could not parse line: " << line; exit(1); }
 
         float numParticles = words[4].toFloat(&ok);

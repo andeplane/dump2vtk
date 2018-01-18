@@ -11,9 +11,9 @@ int main(int argc, char *argv[])
     std::function<float(Voxel &voxel)> customFunctor;
     // If you want to combine values, uncomment the next lines and write a custom functor on each voxel.
     // One example is if three values are the diagonal components of the stress, you could sum them and divide by three to get pressure.
-//    customFunctor = [](Voxel &voxel) {
-//        return 1.0/3*(voxel.values[0]+voxel.values[1]+voxel.values[2]);
-//    };
+    customFunctor = [](Voxel &voxel) {
+        return 1.0/3*(voxel.values[0]+voxel.values[1]+voxel.values[2]);
+    };
 
     if(argc != 7 && argc!=10) {
         qDebug() << "./dump2vtk inFileName outFileName numVoxelsX numVoxelsY numVoxelsZ timestep [voxelSizeX=1 voxelSizeY=1 voxelSizeZ=1]";
